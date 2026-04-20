@@ -208,7 +208,7 @@ def main():
     ]
     main_ax.legend(handles=legend_elems, loc="lower right", frameon=True, fontsize=11, facecolor="white", edgecolor="#ddd")
 
-    fig.text(0.5, 0.04, "Data: Google Places API", ha="center", fontsize=10, color="#666")
+    fig.text(0.5, 0.04, "Data: Google Places API  ·  github.com/qmir2", ha="center", fontsize=10, color="#666")
 
     os.makedirs("results", exist_ok=True)
     out = "results/loneliest_mosques_map.png"
