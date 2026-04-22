@@ -15,8 +15,22 @@ import requests
 from matplotlib import patheffects
 from matplotlib.collections import PatchCollection
 from matplotlib.patches import Polygon as MplPolygon
+from pyproj import Transformer
 
 KM_TO_MI = 0.621371
+
+# EPSG:5070 — NAD83 / Conus Albers. Equal-area projection optimized for CONUS.
+# EPSG:3338 — NAD83 / Alaska Albers.
+# Hawaii inset stays in equirectangular because at Hawaii's small spatial extent
+# the distortion is negligible and a single projection across insets would be
+# awkward.
+PROJ_CONUS = Transformer.from_crs("EPSG:4326", "EPSG:5070", always_xy=True)
+PROJ_ALASKA = Transformer.from_crs("EPSG:4326", "EPSG:3338", always_xy=True)
+
+
+def project(transformer, lon, lat):
+    x, y = transformer.transform(lon, lat)
+    return x, y
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from seed_mosques_google import haversine_m
@@ -72,7 +86,7 @@ def load_us_states_geojson():
     return r.json()
 
 
-def plot_states(ax, gj, bbox):
+def plot_states(ax, gj, bbox, transformer=None):
     west, east, south, north = bbox
     patches = []
     for feature in gj["features"]:
@@ -89,28 +103,38 @@ def plot_states(ax, gj, bbox):
             lats = [p[1] for p in ring]
             if max(lons) < west or min(lons) > east or max(lats) < south or min(lats) > north:
                 continue
+            if transformer is not None:
+                ring = [project(transformer, lon, lat) for lon, lat in ring]
             patches.append(MplPolygon(ring, closed=True))
     pc = PatchCollection(patches, facecolor=STATE_FILL, edgecolor=STATE_EDGE, linewidths=0.8, zorder=1)
     ax.add_collection(pc)
 
 
-def plot_mosques(ax, mosques, loneliest, top_n_labeled, bbox, dot_size=14, star_size=170, label=True):
+def plot_mosques(ax, mosques, loneliest, top_n_labeled, bbox, dot_size=14, star_size=170, label=True, transformer=None):
     west, east, south, north = bbox
 
     def in_view(lat, lon):
         return south <= lat <= north and west <= lon <= east
 
-    lons = [m["lon"] for m in mosques if in_view(m["lat"], m["lon"])]
-    lats = [m["lat"] for m in mosques if in_view(m["lat"], m["lon"])]
-    ax.scatter(lons, lats, s=dot_size, color=MOSQUE_DOT_COLOR, alpha=0.4, zorder=2, linewidths=0)
+    def to_xy(lon, lat):
+        return project(transformer, lon, lat) if transformer is not None else (lon, lat)
+
+    xs, ys = [], []
+    for m in mosques:
+        if in_view(m["lat"], m["lon"]):
+            x, y = to_xy(m["lon"], m["lat"])
+            xs.append(x)
+            ys.append(y)
+    ax.scatter(xs, ys, s=dot_size, color=MOSQUE_DOT_COLOR, alpha=0.4, zorder=2, linewidths=0)
 
     for m in loneliest[:5]:
         if not (in_view(m["lat"], m["lon"]) or in_view(m["_nearest"]["lat"], m["_nearest"]["lon"])):
             continue
         n = m["_nearest"]
+        x1, y1 = to_xy(m["lon"], m["lat"])
+        x2, y2 = to_xy(n["lon"], n["lat"])
         ax.plot(
-            [m["lon"], n["lon"]],
-            [m["lat"], n["lat"]],
+            [x1, x2], [y1, y2],
             color=LONELY_COLOR,
             linewidth=1.6,
             linestyle=(0, (4, 3)),
@@ -119,11 +143,11 @@ def plot_mosques(ax, mosques, loneliest, top_n_labeled, bbox, dot_size=14, star_
             dash_capstyle="round",
         )
 
-    lone_in = [m for m in loneliest if in_view(m["lat"], m["lon"])]
-    if lone_in:
+    lone_xy = [to_xy(m["lon"], m["lat"]) for m in loneliest if in_view(m["lat"], m["lon"])]
+    if lone_xy:
         ax.scatter(
-            [m["lon"] for m in lone_in],
-            [m["lat"] for m in lone_in],
+            [p[0] for p in lone_xy],
+            [p[1] for p in lone_xy],
             s=star_size,
             color=LONELY_COLOR,
             marker="*",
@@ -142,9 +166,9 @@ def plot_mosques(ax, mosques, loneliest, top_n_labeled, bbox, dot_size=14, star_
             loc = f"{city}, {state}" if state else city
             miles = m["_nearest_km"] * KM_TO_MI
             text = f"{loc}\n{miles:.0f} mi"
+            x, y = to_xy(m["lon"], m["lat"])
             ax.annotate(
-                text,
-                (m["lon"], m["lat"]),
+                text, (x, y),
                 textcoords="offset points",
                 xytext=(12, 10),
                 fontsize=11,
@@ -154,8 +178,25 @@ def plot_mosques(ax, mosques, loneliest, top_n_labeled, bbox, dot_size=14, star_
                 path_effects=stroke,
             )
 
-    ax.set_xlim(west, east)
-    ax.set_ylim(south, north)
+    if transformer is not None:
+        # Sample points along the bbox boundary in lat/lon and project each —
+        # the projected bbox is curved, so corner-only projection clips real
+        # US territory (Florida Keys, southern Texas, northern Maine).
+        import numpy as _np
+        samples = []
+        for lon in _np.linspace(west, east, 40):
+            samples.append((lon, south))
+            samples.append((lon, north))
+        for lat in _np.linspace(south, north, 40):
+            samples.append((west, lat))
+            samples.append((east, lat))
+        xs_b = [project(transformer, lon, lat)[0] for lon, lat in samples]
+        ys_b = [project(transformer, lon, lat)[1] for lon, lat in samples]
+        ax.set_xlim(min(xs_b), max(xs_b))
+        ax.set_ylim(min(ys_b), max(ys_b))
+    else:
+        ax.set_xlim(west, east)
+        ax.set_ylim(south, north)
     ax.set_aspect("equal")
     ax.set_axis_off()
 
@@ -177,12 +218,12 @@ def main():
     fig = plt.figure(figsize=(18, 11), facecolor="white")
 
     main_ax = fig.add_axes([0.02, 0.10, 0.96, 0.82])
-    plot_states(main_ax, gj, CONTIGUOUS_BBOX)
-    plot_mosques(main_ax, mosques, loneliest, top_n_labeled=5, bbox=CONTIGUOUS_BBOX)
+    plot_states(main_ax, gj, CONTIGUOUS_BBOX, transformer=PROJ_CONUS)
+    plot_mosques(main_ax, mosques, loneliest, top_n_labeled=5, bbox=CONTIGUOUS_BBOX, transformer=PROJ_CONUS)
 
     ak_ax = fig.add_axes([0.04, 0.10, 0.18, 0.18])
-    plot_states(ak_ax, gj, ALASKA_BBOX)
-    plot_mosques(ak_ax, mosques, loneliest, top_n_labeled=0, bbox=ALASKA_BBOX, dot_size=60, star_size=140, label=False)
+    plot_states(ak_ax, gj, ALASKA_BBOX, transformer=PROJ_ALASKA)
+    plot_mosques(ak_ax, mosques, loneliest, top_n_labeled=0, bbox=ALASKA_BBOX, dot_size=60, star_size=140, label=False, transformer=PROJ_ALASKA)
     ak_ax.text(0.02, 0.93, "Alaska", transform=ak_ax.transAxes, fontsize=10, fontweight="bold", color="#222")
 
     hi_ax = fig.add_axes([0.22, 0.10, 0.12, 0.12])

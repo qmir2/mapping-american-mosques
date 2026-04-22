@@ -1,0 +1,11 @@
+rank,city,state,population,nearest_mosque,nearest_city,nearest_state,distance_mi
+1,Eagle Butte,SD,1228,Queresha Mosque,Gillette,WY,214.6
+2,Havre,MT,9330,Billings Islamic Center,Billings,MT,196.4
+3,Chinook,MT,1160,Billings Islamic Center,Billings,MT,194.6
+4,Presidio,TX,3102,Al-Rahma Mosque,El Paso,TX,191.2
+5,Mobridge,SD,3224,Islamic Society of Minot,Minot,ND,190.1
+6,Ely,NV,3907,Utah Islamic Center (UIC),West Jordan,UT,181.1
+7,Mission,SD,1142,Islamic Center of Lexington Nebraksa,Lexington,NE,181.0
+8,Fort Pierre,SD,2175,Islamic Society of Brookings,Brookings,SD,177.7
+9,Malta,MT,1872,Billings Islamic Center,Billings,MT,177.4
+10,Gordon,NE,1444,Islamic Center of Cheyenne Wy,Cheyenne,WY,175.3

@@ -1,0 +1,21 @@
+rank,city,state,population,nearest_mosque,nearest_city,nearest_state,distance_mi
+1,Unalaska,AK,4214,Islamic Community Center of Anchorage (Alaska Mosque),Anchorage,AK,791.3
+2,Akutan,AK,1586,Islamic Community Center of Anchorage (Alaska Mosque),Anchorage,AK,758.3
+3,UtqiagÌvik,AK,4694,"Muslim Community of Alaska, Inc (Masjid Ash-Shura of Alaska)",Anchorage,AK,719.7
+4,Wrangell and borough,AK,2064,Islamic Center Of Blaine,Blaine,WA,630.3
+5,Craig,AK,1041,Islamic Center Of Blaine,Blaine,WA,626.4
+6,Sitka and borough,AK,8282,Islamic Community Center of Anchorage (Alaska Mosque),Anchorage,AK,579.7
+7,Ketchikan,AK,8079,Islamic Center Of Blaine,Blaine,WA,579.3
+8,Juneau and borough,AK,31555,Islamic Community Center of Anchorage (Alaska Mosque),Anchorage,AK,576.7
+9,Kotzebue,AK,2979,"Muslim Community of Alaska, Inc (Masjid Ash-Shura of Alaska)",Anchorage,AK,545.1
+10,Nome,AK,3639,"Muslim Community of Alaska, Inc (Masjid Ash-Shura of Alaska)",Anchorage,AK,538.0
+11,Hooper Bay,AK,1308,"Muslim Community of Alaska, Inc (Masjid Ash-Shura of Alaska)",Anchorage,AK,536.0
+12,Bethel,AK,6292,"Muslim Community of Alaska, Inc (Masjid Ash-Shura of Alaska)",Anchorage,AK,398.9
+13,Dillingham,AK,2126,Islamic Community Center of Anchorage (Alaska Mosque),Anchorage,AK,331.3
+14,Fairbanks,AK,31856,"Muslim Community of Alaska, Inc (Masjid Ash-Shura of Alaska)",Anchorage,AK,261.0
+15,North Pole,AK,2427,"Muslim Community of Alaska, Inc (Masjid Ash-Shura of Alaska)",Anchorage,AK,258.1
+16,Kodiak,AK,5354,Islamic Community Center of Anchorage (Alaska Mosque),Anchorage,AK,248.7
+17,Eagle Butte,SD,1228,Queresha Mosque,Gillette,WY,214.6
+18,Havre,MT,9330,Billings Islamic Center,Billings,MT,196.4
+19,Chinook,MT,1160,Billings Islamic Center,Billings,MT,194.6
+20,Presidio,TX,3102,Al-Rahma Mosque,El Paso,TX,191.2
